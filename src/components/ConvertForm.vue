@@ -84,11 +84,9 @@ export default {
       convertFormStep.value = 1
       jsonFile.value.value = ""
       convertFormError.value = ""
-      convertFormOntology = {
-        "ontology": {},
-        "selected_ontology": {},
-        "example_record": {}
-      }
+      convertFormOntology.ontology = {}
+      convertFormOntology.selected_ontology = {}
+      convertFormOntology.example_record = {}
     }
 
     return {
