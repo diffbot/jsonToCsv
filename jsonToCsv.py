@@ -89,7 +89,9 @@ def generate_csv(ontology, data_list, start_time=time.time(), ont_delimiter=None
     writer.writerow(ontology)
     yield line.read()
 
+    print(data_list)
     for item in data_list:
+        print(item)
         row = []
         for field in ontology:
             keys = field.split(ont_delimiter)

@@ -32,6 +32,7 @@ export default {
     })
 
     const numSelectedOntologyColumns = computed(() => {
+      console.log(convertFormOntology.selected_ontology)
       return Object.values(convertFormOntology.selected_ontology).filter(value => value === true).length;
     })
 
@@ -56,9 +57,11 @@ export default {
             convertFormFileName.value = response?.file_name
             // Set Ontology
             convertFormOntology.ontology = response["ontology"]
+            convertFormOntology.selected_ontology = {}
             response["ontology"].forEach((ont) => convertFormOntology.selected_ontology[ont] = true)
             convertFormOntology.example_record = response["example_record"]
             convertFormStep.value = 2
+            console.log(convertFormOntology)
             // Reset Form Step 1
             jsonFile.value.value = ""
             convertFormError.value = ""
