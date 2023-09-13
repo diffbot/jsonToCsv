@@ -89,13 +89,20 @@ def generate_csv(ontology, data_list, start_time=time.time(), ont_delimiter=None
     writer.writerow(ontology)
     yield line.read()
 
-    print(data_list)
-    for item in data_list:
-        print(item)
+    if isinstance(data_list, list):
+        for item in data_list:
+            row = []
+            for field in ontology:
+                keys = field.split(ont_delimiter)
+                value = get_nested_value(item, keys)
+                row.append(value)
+            writer.writerow(row)
+            yield line.read()
+    elif isinstance(data_list, dict):
         row = []
         for field in ontology:
             keys = field.split(ont_delimiter)
-            value = get_nested_value(item, keys)
+            value = get_nested_value(data_list, keys)
             row.append(value)
         writer.writerow(row)
         yield line.read()
@@ -104,7 +111,7 @@ def generate_csv(ontology, data_list, start_time=time.time(), ont_delimiter=None
     print(f"CSV conversion completed in {time_complete} seconds")
 
 # Read & Convert the JSON data
-def convert_json_to_csv(file, cli=False, json_paste=None, selected_ontology_string=None):
+def convert_json_to_csv(file, cli=False, json_paste=None, selected_ontology_string=None, advanced_string=""):
     start_time = time.time()
     if file:
         with open(file, 'rb') as f:
@@ -119,6 +126,10 @@ def convert_json_to_csv(file, cli=False, json_paste=None, selected_ontology_stri
     except:
         # Didn't parse, return invalid JSON
         raise
+
+    advanced_settings = {}
+    if advanced_string:
+        advanced_settings = msgspec.json.decode(advanced_string)
 
     # Navigate through the top level keys for the primary list
     try:
@@ -138,22 +149,29 @@ def convert_json_to_csv(file, cli=False, json_paste=None, selected_ontology_stri
         selected_ontology = msgspec.json.decode(selected_ontology_string)
         if selected_ontology:
             ontology = [ont for ont in selected_ontology.keys() if selected_ontology.get(ont, False)]
-        return generate_csv(ontology, data_list, start_time=start_time, ont_delimiter=ont_delimiter)
+        return generate_csv(ontology, data_json if advanced_settings.get('allAttributes', False) else data_list, start_time=start_time, ont_delimiter=ont_delimiter)
 
     # Build an ontology of fields
     ontology = []
-    for item in data_list:
+    if not advanced_settings.get('allAttributes', False):
+        for item in data_list:
+            try:
+                ontology = build_ontology(item, ontology, delimiter=ont_delimiter)
+            except AttributeError:
+                # No keys, either a list or primitive, skip
+                continue
+    else:
         try:
-            ontology = build_ontology(item, ontology, delimiter=ont_delimiter)
+            ontology = build_ontology(data_json, ontology, delimiter=ont_delimiter)
         except AttributeError:
             # No keys, either a list or primitive, skip
-            continue
+            pass
     ontology_time_elapsed = time.time() - start_time
     print(f"Ontology generated in {ontology_time_elapsed} seconds")
     example_record = {}
     for field in ontology:
         keys = field.split(ont_delimiter)
-        value = get_nested_value(data_list[0], keys)
+        value = get_nested_value(data_json if advanced_settings.get('allAttributes', False) else data_list[0], keys)
         example_record[field] = value
     return {
         "ontology": ontology,

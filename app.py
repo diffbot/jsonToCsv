@@ -5,6 +5,7 @@ import os
 import hashlib
 import time
 import urllib
+import json
 
 import jsonToCsv
 
@@ -43,11 +44,18 @@ def index(filename):
 @app.route('/api/convert', methods=['POST'])
 def convert():
 
-    # Get Selected Ontology and File Path
+    # Get Form Data
     selected_ontology_string = request.form.get('selected_ontology')
     file_name = request.form.get('file_name')
+    advanced_string = request.form.get('advanced')
     if selected_ontology_string:
         selected_ontology_string = urllib.parse.unquote(selected_ontology_string)
+    if not advanced_string:
+        advanced = {
+            "allAttributes": request.form.get('allAttributes', False)
+        }
+        advanced_string = json.dumps(advanced)
+        print(advanced_string)
 
     # Form Step 1: Get Ontology Based on File
         # Save json_file or json_paste
@@ -62,11 +70,11 @@ def convert():
                 file_name = f'{hashlib.md5(str(time.time()).encode("utf-8")).hexdigest()}_{json_file.filename}'
                 file_path = os.path.join('uploads', file_name)
                 json_file.save(file_path)
-                response = jsonToCsv.convert_json_to_csv(file_path)
+                response = jsonToCsv.convert_json_to_csv(file_path, advanced_string=advanced_string)
                 response.update({'file_name': file_name})
                 return jsonify(response)
             elif request.form.get('json_paste', None):
-                response = jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste'])
+                response = jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste'], advanced_string=advanced_string)
                 return jsonify(response)
             else:
                 return jsonify({"error": "No JSON attached"}), 400
@@ -81,11 +89,11 @@ def convert():
         file_path = os.path.join('uploads', file_name)
         file_exists = os.path.isfile(file_path)
         if file_exists:
-            response = Response(jsonToCsv.convert_json_to_csv(file_path, selected_ontology_string=selected_ontology_string), mimetype='text/csv')
+            response = Response(jsonToCsv.convert_json_to_csv(file_path, selected_ontology_string=selected_ontology_string, advanced_string=advanced_string), mimetype='text/csv')
             response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
             return response
         elif request.form.get('json_paste', None):
-            response = Response(jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste'], selected_ontology_string=selected_ontology_string), mimetype='text/csv')
+            response = Response(jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste'], selected_ontology_string=selected_ontology_string, advanced_string=advanced_string), mimetype='text/csv')
             response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
             return response
         else:

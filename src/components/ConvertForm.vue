@@ -8,6 +8,9 @@ export default {
     const tabInactiveClass = "rounded-t-lg hover:text-gray-600"
     const convertForm = ref(null)
     const convertFormStep = ref(1)
+    const convertFormAdvanced = reactive({
+      'allAttributes': false
+    })
     const convertFormError = ref("")
     const convertFormFileName = ref("")
     const convertFormOntology = reactive({
@@ -32,7 +35,6 @@ export default {
     })
 
     const numSelectedOntologyColumns = computed(() => {
-      console.log(convertFormOntology.selected_ontology)
       return Object.values(convertFormOntology.selected_ontology).filter(value => value === true).length;
     })
 
@@ -46,6 +48,7 @@ export default {
         else if (jsonFile.value.files && jsonFile.value.files[0]) {
           formData.append('json_file', jsonFile.value.files[0]) 
         }
+        formData.append('advanced', JSON.stringify(convertFormAdvanced))
         fetch(`${baseUrl}/api/convert`, {
           method: 'POST',
           body: formData,
@@ -53,6 +56,7 @@ export default {
         .then(response => response.json())
         .then((response) => {
           if (response && !response.error) {
+            console.log(response)
             // Set File Path
             convertFormFileName.value = response?.file_name
             // Set Ontology
@@ -61,7 +65,6 @@ export default {
             response["ontology"].forEach((ont) => convertFormOntology.selected_ontology[ont] = true)
             convertFormOntology.example_record = response["example_record"]
             convertFormStep.value = 2
-            console.log(convertFormOntology)
             // Reset Form Step 1
             jsonFile.value.value = ""
             convertFormError.value = ""
@@ -96,6 +99,7 @@ export default {
       baseUrl, 
       convertForm,
       convertFormStep,
+      convertFormAdvanced,
       convertFormFileName,
       convertFormOntology,
       convertFormError,
@@ -112,7 +116,7 @@ export default {
 </script>
 
 <template>
-  <div class="container mx-auto flex flex-col h-screen items-center antialiased px-10 pt-12">
+  <div class="container mx-auto pb-10 flex flex-col items-center antialiased px-10 pt-12">
     <div class="mb-6 w-full lg:w-2/3 flex items-top">
       <div class="grow">
         <h1 class="text-4xl font-bold tracking-tighter mb-2">JSON to CSV</h1>
@@ -200,18 +204,28 @@ export default {
         <input type="hidden" name="file_name" :value="convertFormFileName" />
         <input type="hidden" name="selected_ontology" :value="encodeURIComponent(JSON.stringify(convertFormOntology.selected_ontology))" />
         <div id="formStep1">
-          <div class="mb-3">
-            <label for="json_paste" class="text-sm block">
-              <span class="font-semibold">Option 1:</span> Paste JSON
-            </label>
-            <textarea id="json_paste" name="json_paste" ref="jsonPaste" @change="jsonFile.value = ''" class="w-full border border-slate-100 font-mono text-sm p-3 mt-3" rows="10" :placeholder="jsonPastePlaceholder"></textarea>
-          </div>
-          <div>
+          <div class="mb-6">
             <label for="json_file" class="text-sm block">
-              <span class="font-semibold">Option 2:</span> Upload a JSON file
+              <span class="font-semibold">Option 1:</span> Upload a JSON file
             </label>
             <input type="file" id="json_file" name="json_file" ref="jsonFile" @change="jsonPaste.value = ''" class="block w-full mt-3 text-sm text-slate-500
               file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100" />
+          </div>
+          <div class="mb-4">
+            <label for="json_paste" class="text-sm block">
+              <span class="font-semibold">Option 2:</span> Paste JSON
+            </label>
+            <textarea id="json_paste" name="json_paste" ref="jsonPaste" @change="jsonFile.value = ''" class="w-full border border-slate-100 font-mono text-sm p-3 mt-3" rows="10" :placeholder="jsonPastePlaceholder"></textarea>
+          </div>
+          <div class="mb-6">
+            <div class="text-sm font-semibold mb-2">
+              Advanced Settings
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="allAttributes" name="allAttributes" v-model="convertFormAdvanced.allAttributes" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 
+              dark:border-gray-600">
+              <label for="allAttributes" class="text-sm text-gray-600">Flatten as a single record</label>
+            </div>
           </div>
           <div
             class="w-full pt-4 mb-8">
@@ -226,7 +240,6 @@ export default {
       </form>
     </div>
   </div>
-
   <div v-if="convertFormStep == 2" class="absolute inset-0 flex items-center justify-center">
     <transition name="fade" appear>
       <div v-if="convertFormStep == 2" class="absolute bg-black opacity-60 inset-0 z-0" @click="convertFormStep = 1"></div>
