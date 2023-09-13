@@ -76,6 +76,18 @@ export default {
       }
     }
 
+    function resetConvertForm() {
+      convertFormFileName.value = ""
+      convertFormStep.value = 1
+      jsonFile.value.value = ""
+      convertFormError.value = ""
+      convertFormOntology = {
+        "ontology": {},
+        "selected_ontology": {},
+        "example_record": {}
+      }
+    }
+
     return {
       currentTab,
       tabActiveClass,
@@ -91,7 +103,8 @@ export default {
       jsonPaste, 
       jsonFile, 
       jsonPastePlaceholder,
-      appIsLocal
+      appIsLocal,
+      resetConvertForm
     }
   }
 }
@@ -226,7 +239,7 @@ export default {
               <br /><span class="text-sm text-slate-500">{{ numSelectedOntologyColumns }} Selected</span>
             </div>
             <div>
-              <button type="button" @click="convertForm.submit()" class="w-auto py-2 px-6 text-sm font-semibold rounded-full border-0 bg-sky-600 text-sky-100 hover:bg-sky-500">Finish Conversion</button>
+              <button type="button" @click="convertForm.submit(); resetConvertForm()" class="w-auto py-2 px-6 text-sm font-semibold rounded-full border-0 bg-sky-600 text-sky-100 hover:bg-sky-500">Finish Conversion</button>
             </div>
           </div>
           <div class="max-h-[400px] overflow-x-auto overflow-y-auto relative rounded-b-lg">
