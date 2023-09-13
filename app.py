@@ -4,6 +4,7 @@ from flask_apscheduler import APScheduler
 import os
 import hashlib
 import time
+import urllib
 
 import jsonToCsv
 
@@ -41,25 +42,55 @@ def index(filename):
 # Route for Convert Backend
 @app.route('/api/convert', methods=['POST'])
 def convert():
-    # Check if the POST request has the file part
-    if 'json_file' not in request.files:
-        return jsonify({"error": "No JSON file attached"}), 400
 
-    # Read and process the JSON file
-    json_file = request.files['json_file']
-    if json_file and json_file.filename != '' and json_file.filename.endswith('.json'):
-        # Save the File
-        file_path = os.path.join('uploads', f'{hashlib.md5(str(time.time()).encode("utf-8")).hexdigest()}_{json_file.filename}')
-        json_file.save(file_path)
-        # Convert the File
-        response = Response(jsonToCsv.convert_json_to_csv(file_path), mimetype='text/csv')
-        response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
-        return response
-    elif 'json_paste' in request.form:
-        # Convert the File
-        response = Response(jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste']), mimetype='text/csv')
-        response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
-        return response
+    # Get Selected Ontology and File Path
+    selected_ontology_string = request.form.get('selected_ontology')
+    file_name = request.form.get('file_name')
+    if selected_ontology_string:
+        selected_ontology_string = urllib.parse.unquote(selected_ontology_string)
+
+    # Form Step 1: Get Ontology Based on File
+        # Save json_file or json_paste
+        # Generate Ontology
+        # Return ontology and file_name
+    if not selected_ontology_string and not file_name:
+        try:
+            # Read and process the JSON file
+            json_file = request.files.get('json_file', None)
+            if json_file and json_file.filename != '' and json_file.filename.endswith('.json'):
+                # Save the File
+                file_name = f'{hashlib.md5(str(time.time()).encode("utf-8")).hexdigest()}_{json_file.filename}'
+                file_path = os.path.join('uploads', file_name)
+                json_file.save(file_path)
+                response = jsonToCsv.convert_json_to_csv(file_path)
+                response.update({'file_name': file_name})
+                return jsonify(response)
+            elif request.form.get('json_paste', None):
+                response = jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste'])
+                return jsonify(response)
+            else:
+                return jsonify({"error": "No JSON attached"}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+    # Form Step 2: Use Selected Ontology and File Path to Generate CSV
+        # Parse selected ontology and file path
+        # Check if file exists
+        # Generate CSV based on selected ontology and file path
+        # Return CSV as stream
+    else:
+        file_path = os.path.join('uploads', file_name)
+        file_exists = os.path.isfile(file_path)
+        if file_exists:
+            response = Response(jsonToCsv.convert_json_to_csv(file_path, selected_ontology_string=selected_ontology_string), mimetype='text/csv')
+            response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
+            return response
+        elif request.form.get('json_paste', None):
+            response = Response(jsonToCsv.convert_json_to_csv(False, json_paste=request.form['json_paste'], selected_ontology_string=selected_ontology_string), mimetype='text/csv')
+            response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
+            return response
+        else:
+            return jsonify({"error": "Unknown Error"}), 400
+
 
     return jsonify({"error": "Unsupported file type"}), 400
 

@@ -5,17 +5,6 @@ import csv
 import traceback
 import time
 
-"""
-# --------------------------------------------------------------------
-# A JSON to CSV Conversion Tool for Deeply Nested JSON
-# author: @jeromechoo
-# --------------------------------------------------------------------
-# @usage:
-# 1. Place this script (jsonToCsv.py) in a folder with the target json file
-# 2. Run > python jsonToCsv.py <name_of_json_file_without_format_extension> e.g. (python jsonToCsv.py jsonFile)
-#
-"""
-
 def get_nested_value(data_dict, keys_list, list_delimiter=";"):
     # Retrieve nested value from a dictionary based on a list of keys
     for key in keys_list:
@@ -83,44 +72,7 @@ def build_ontology(data, ontology, parent_field_name="", max_list_depth=3, delim
         raise AttributeError
     return ontology
 
-
-# Read & Convert the JSON data
-def convert_json_to_csv(file, cli=False, json_paste=None):
-    start_time = time.time()
-    if file:
-        with open(file, 'rb') as f:
-            content = f.read()
-    else:
-        content = json_paste
-
-    data_json = msgspec.json.decode(content)
-    data_list = None
-    ont_delimiter = "/"
-
-    # Navigate through the top level keys for the primary list
-    try:
-        largest_list_key, data_list = find_the_big_list(data_json)
-        if not largest_list_key:
-            raise AttributeError
-        print(f"[{largest_list_key}] is the key with the biggest list at {len(data_list)} items")
-    except AttributeError:
-        # No large list found, top level is either just a single json object or the json array itself
-        if isinstance(data_json, dict): # Single json object
-            data_list = [data_json]
-        else:
-            data_list = data_json
-
-    # Build an ontology of fields
-    ontology = []
-    for item in data_list:
-        try:
-            ontology = build_ontology(item, ontology, delimiter=ont_delimiter)
-        except AttributeError:
-            # No keys, either a list or primitive, skip
-            continue
-    ontology_time_elapsed = time.time() - start_time
-    print(f"Ontology generated in {ontology_time_elapsed} seconds")
-
+def generate_csv(ontology, data_list, start_time=time.time(), ont_delimiter=None):
     class Line(object):
         def __init__(self):
             self._line = None
@@ -128,25 +80,6 @@ def convert_json_to_csv(file, cli=False, json_paste=None):
             self._line = line
         def read(self):
             return self._line
-
-    # Create CSV
-    if cli:
-        filename = f"{input_filename}.csv"
-        with open(filename, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-
-            # Write header
-            writer.writerow(ontology)
-            for item in data_list:
-                row = []
-                for field in ontology:
-                    keys = field.split(ont_delimiter)
-                    value = get_nested_value(item, keys)
-                    row.append(value)
-                writer.writerow(row)
-        time_complete = time.time() - start_time
-        print(f"CSV conversion completed in {time_complete} seconds")
-        return
 
     # Create CSV
     line = Line()
@@ -168,6 +101,59 @@ def convert_json_to_csv(file, cli=False, json_paste=None):
     time_complete = time.time() - start_time
     print(f"CSV conversion completed in {time_complete} seconds")
 
-# Not working. Fix this later.
-if input_filename := sys.argv[1]:
-    convert_json_to_csv(input_filename, cli=True)
+# Read & Convert the JSON data
+def convert_json_to_csv(file, cli=False, json_paste=None, selected_ontology_string=None):
+    start_time = time.time()
+    if file:
+        with open(file, 'rb') as f:
+            content = f.read()
+    else:
+        content = json_paste
+
+    data_list = None
+    ont_delimiter = "/"
+    try: 
+        data_json = msgspec.json.decode(content)
+    except:
+        # Didn't parse, return invalid JSON
+        raise
+
+    # Navigate through the top level keys for the primary list
+    try:
+        largest_list_key, data_list = find_the_big_list(data_json)
+        if not largest_list_key:
+            raise AttributeError
+        print(f"[{largest_list_key}] is the key with the biggest list at {len(data_list)} items")
+    except AttributeError:
+        # No large list found, top level is either just a single json object or the json array itself
+        if isinstance(data_json, dict): # Single json object
+            data_list = [data_json]
+        else:
+            data_list = data_json
+
+    # Filter Ontology by Selected Ontology
+    if selected_ontology_string:
+        selected_ontology = msgspec.json.decode(selected_ontology_string)
+        if selected_ontology:
+            ontology = [ont for ont in selected_ontology.keys() if selected_ontology.get(ont, False)]
+        return generate_csv(ontology, data_list, start_time=start_time, ont_delimiter=ont_delimiter)
+
+    # Build an ontology of fields
+    ontology = []
+    for item in data_list:
+        try:
+            ontology = build_ontology(item, ontology, delimiter=ont_delimiter)
+        except AttributeError:
+            # No keys, either a list or primitive, skip
+            continue
+    ontology_time_elapsed = time.time() - start_time
+    print(f"Ontology generated in {ontology_time_elapsed} seconds")
+    example_record = {}
+    for field in ontology:
+        keys = field.split(ont_delimiter)
+        value = get_nested_value(data_list[0], keys)
+        example_record[field] = value
+    return {
+        "ontology": ontology,
+        "example_record": example_record
+    }
