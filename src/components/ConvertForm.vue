@@ -56,7 +56,8 @@ export default {
         .then(response => response.json())
         .then((response) => {
           if (response && !response.error) {
-            console.log(response)
+            // Track Step 1 Completions
+            plausible('Step 1: Upload JSON', {props: {method: jsonPaste.value.value ? 'json_paste' : 'json_file'}})
             // Set File Path
             convertFormFileName.value = response?.file_name
             // Set Ontology
@@ -66,6 +67,7 @@ export default {
             convertFormOntology.example_record = response["example_record"]
             convertFormStep.value = 2
             // Reset Form Step 1
+            jsonPaste.value.value = ""
             jsonFile.value.value = ""
             convertFormError.value = ""
           } 
@@ -73,12 +75,18 @@ export default {
             console.error(response);
             if (response.error) {
               convertFormError.value = response.error
+              // Track Step 1 Errors
+              plausible('Step 1: JSON / Error', {props: {error: response.error}})
             }
           }
         })
         .catch((error) => {
           console.error('An error occurred:', error);
         });
+      }
+      else {
+        // Track Step 2 Completions
+        plausible('Step 2: Download CSV')
       }
     }
 
