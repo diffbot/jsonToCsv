@@ -84,13 +84,11 @@ export default {
           console.error('An error occurred:', error);
         });
       }
-      else {
-        // Track Step 2 Completions
-        plausible('Step 2: Download CSV')
-      }
     }
 
     function resetConvertForm() {
+      // Track Step 2 Completions
+      plausible('Step 2: Download CSV')
       convertFormFileName.value = ""
       convertFormStep.value = 1
       jsonFile.value.value = ""
