@@ -67,8 +67,7 @@ export default {
             convertFormOntology.example_record = response["example_record"]
             convertFormStep.value = 2
             // Reset Form Step 1
-            jsonPaste.value.value = ""
-            jsonFile.value.value = ""
+            jsonFile.value.value = "" // Don't reset jsonPaste, this is necessary for step 2 submit
             convertFormError.value = ""
           } 
           else {
@@ -91,8 +90,10 @@ export default {
       plausible('Step 2: Download CSV')
       convertFormFileName.value = ""
       convertFormStep.value = 1
+      jsonPaste.value.value = ""
       jsonFile.value.value = ""
       convertFormError.value = ""
+      convertFormAdvanced.allAttributes = false
       convertFormOntology.ontology = {}
       convertFormOntology.selected_ontology = {}
       convertFormOntology.example_record = {}

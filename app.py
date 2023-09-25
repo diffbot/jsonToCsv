@@ -55,7 +55,6 @@ def convert():
             "allAttributes": request.form.get('allAttributes', False)
         }
         advanced_string = json.dumps(advanced)
-        print(advanced_string)
 
     # Form Step 1: Get Ontology Based on File
         # Save json_file or json_paste
