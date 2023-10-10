@@ -94,7 +94,7 @@ export default {
 				<label for="guest_name" id="guest_name_label" class="text-sm block me-3">
 					<span class="font-semibold text-slate-500">By</span>
 				</label>
-				<input type="text" id="guest_name" aria-labeledby="guest_name_label" name="name" class="w-full border-0 border-b bg-amber-50 border-gray-300 text-sm" placeholder="Anonymous" v-model="guestbookForm.name" />
+				<input type="text" id="guest_name" aria-labeledby="guest_name_label" name="name" class="w-full border-0 border-b bg-amber-50 border-gray-300 text-sm" placeholder="Anonymous" v-model="guestbookForm.name" autocomplete="given-name" />
 			</div>
 			<div class="flex flex-row items-center py-1 px-3">
 				<label for="guest_location" id="guest_location_label" class="text-sm block me-3">

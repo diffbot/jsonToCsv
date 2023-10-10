@@ -23,6 +23,7 @@ export default {
       "selected_ontology": {},
       "example_record": {}
     })
+    const convertFormProcessing = ref(false)
     const jsonPaste = ref(null)
     const jsonFile = ref(null)
     const jsonPastePlaceholder = ref(null)
@@ -49,6 +50,7 @@ export default {
     function convertFormSubmit(e) {
       if (convertFormStep.value == 1) {
         e.preventDefault()
+        convertFormProcessing.value = true
         let formData = new FormData()
         if (jsonPaste.value.value) {
           formData.append('json_paste', jsonPaste.value.value)
@@ -92,6 +94,9 @@ export default {
         })
         .catch((error) => {
           console.error('An error occurred:', error);
+        })
+        .finally(() => {
+          convertFormProcessing.value = false
         });
       }
     }
@@ -124,6 +129,7 @@ export default {
       convertFormOntology,
       convertFormError,
       convertFormSubmit,
+      convertFormProcessing,
       numSelectedOntologyColumns,
       jsonPaste, 
       jsonFile, 
@@ -259,7 +265,9 @@ export default {
           <div
             class="w-full pt-4 mb-8">
             <div class="flex justify-center">
-              <button type="submit" class="w-full sm:w-auto block py-2 px-6 font-semibold rounded-full border-0 bg-sky-600 text-sky-100 hover:bg-sky-500">Convert to CSV</button>
+              <button type="submit" :disabled="convertFormProcessing" class="w-full sm:w-auto block py-2 px-6 font-semibold rounded-full border-0 bg-sky-600 text-sky-100 hover:bg-sky-500 disabled:bg-sky-400">
+                {{ convertFormProcessing ? "Processing..." : "Convert to CSV" }}
+              </button>
             </div>
             <div class="flex justify-center mt-2">
               <a href="https://github.com/diffbot/jsonToCsv/blob/main/app.py#L20" target="_blank" class="text-xs">All data wiped at the top of every hour</a>
