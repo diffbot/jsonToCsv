@@ -5,7 +5,7 @@ import ConvertForm from './components/ConvertForm.vue'
 
 <template>
   <header>
-    <div class="wrapper bg-slate-50 relative">
+    <div class="wrapper bg-slate-50 relative min-h-screen">
       <ConvertForm />
     </div>
   </header>

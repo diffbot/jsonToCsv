@@ -1,7 +1,12 @@
 <script>
 import { ref, reactive, computed } from 'vue'
+import GuestBook from './GuestBook.vue'
+import { getCookie } from '../utils.js';
 
 export default {
+  components: {
+    GuestBook
+  },
   setup() {
     const currentTab = ref("online")
     const tabActiveClass = "text-blue-600 bg-white rounded-t-lg active"
@@ -22,6 +27,9 @@ export default {
     const jsonFile = ref(null)
     const jsonPastePlaceholder = ref(null)
     const baseUrl = window.location.origin
+    const csrfToken = getCookie('csrftoken')
+    const guestBookComponent = ref(null)
+    const guestbookVisible = ref(false)
 
     jsonPastePlaceholder.value = `{
       "request": {
@@ -52,6 +60,9 @@ export default {
         fetch(`${baseUrl}/api/convert`, {
           method: 'POST',
           body: formData,
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
         })
         .then(response => response.json())
         .then((response) => {
@@ -97,6 +108,8 @@ export default {
       convertFormOntology.ontology = {}
       convertFormOntology.selected_ontology = {}
       convertFormOntology.example_record = {}
+      // Check on Guestbook Posts
+      guestBookComponent.value.getPosts()
     }
 
     return {
@@ -116,7 +129,10 @@ export default {
       jsonFile, 
       jsonPastePlaceholder,
       appIsLocal,
-      resetConvertForm
+      resetConvertForm,
+      csrfToken,
+      guestBookComponent,
+      guestbookVisible
     }
   }
 }
@@ -158,6 +174,11 @@ export default {
         <li class="me-1">
             <a href="#" @click="currentTab = 'hosted'" :aria-selected="currentTab == 'hosted'" class="flex items-center p-4 pb-5 px-6" :class="[currentTab == 'hosted' ? tabActiveClass : tabInactiveClass]">
               <span class="inline-block me-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> Self-Hosted
+            </a>
+        </li>
+        <li class="me-1" v-if="guestbookVisible">
+            <a href="#" @click="currentTab = 'guestbook'" :aria-selected="currentTab == 'guestbook'" class="flex items-center p-4 pb-5 px-6" :class="[currentTab == 'guestbook' ? tabActiveClass : tabInactiveClass]">
+              <span class="inline-block me-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span> Guestbook
             </a>
         </li>
     </ul>
@@ -204,10 +225,11 @@ export default {
           </li>
         </ul>
       </div>
-      <form v-show="currentTab == 'online'" ref="convertForm" enctype="multipart/form-data" method="POST" class="w-full flex flex-col space-y-4 py-6" :action="baseUrl + '/api/convert'" @submit="convertFormSubmit">
+      <form v-show="currentTab == 'online'" ref="convertForm" enctype="multipart/form-data" method="POST" class="w-full flex flex-col space-b-4 py-6" :action="baseUrl + '/api/convert'" @submit="convertFormSubmit">
         <div v-if="convertFormError" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
           <span class="font-medium">Error —</span> {{ convertFormError }}
         </div>
+        <input type="hidden" name="csrf_token" :value="csrfToken" />
         <input type="hidden" name="file_name" :value="convertFormFileName" />
         <input type="hidden" name="selected_ontology" :value="encodeURIComponent(JSON.stringify(convertFormOntology.selected_ontology))" />
         <div id="formStep1">
@@ -245,6 +267,9 @@ export default {
           </div>
         </div>
       </form>
+      <div v-show="currentTab == 'guestbook'" class="w-full py-6">
+        <GuestBook @guestbook-visible="guestbookVisible = true" ref="guestBookComponent" />
+      </div>
     </div>
   </div>
   <div v-if="convertFormStep == 2" class="absolute inset-0 flex items-center justify-center">
