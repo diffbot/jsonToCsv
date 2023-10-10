@@ -40,6 +40,7 @@ export default {
         .then(response => response.json())
         .then((response) => {
         	if (response && !response.error) {
+        		plausible('Signed Guestbook')
         		resetGuestbookForm()
         		getPosts()
         	}
