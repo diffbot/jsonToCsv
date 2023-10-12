@@ -183,8 +183,15 @@ export default {
             </a>
         </li>
         <li class="me-1" v-if="guestbookVisible">
-            <a href="#" @click="currentTab = 'guestbook'" :aria-selected="currentTab == 'guestbook'" class="flex items-center p-4 pb-5 px-6" :class="[currentTab == 'guestbook' ? tabActiveClass : tabInactiveClass]">
-              <span class="inline-block me-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span> Guestbook
+            <a href="#" @click="currentTab = 'guestbook'" :aria-selected="currentTab == 'guestbook'" class="flex items-center p-4 pb-5 px-6 text-amber-600 hover:text-amber-500" :class="[currentTab == 'guestbook' ? tabActiveClass : tabInactiveClass]">
+<!--               <span class="inline-block me-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </span>  -->
+              <span class="relative inline-block flex h-2 w-2 me-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+              </span>
+              Guestbook
             </a>
         </li>
     </ul>
