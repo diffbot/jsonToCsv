@@ -29,6 +29,9 @@ else:
 # CSRF
 csrf = CSRFProtect(app)
 
+# Secure session cookies
+app.config['SESSION_COOKIE_SECURE'] = True
+
 # Really basic rate limiting to avoid taking down the app by bad actors
 limiter = Limiter(
     get_remote_address, 
